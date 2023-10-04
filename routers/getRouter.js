@@ -218,9 +218,8 @@ getRouter.get('/lgratings/:brandName', async (req, res) => {
       brandName: req.params.brandName
     })
 
-    // console.log('findIdByBrandName --->', findIdByBrandName)
-
-    ratingSchema.find({ brandName: findIdByBrandName._id }).then(dbRes => {
+    ratingSchema.find({ brandId: findIdByBrandName._id }).then(dbRes => {
+      // return res.status(200).json(dbRes.length)
       return res.status(200).json(dbRes.reverse())
     })
   } catch (error) {
@@ -256,7 +255,9 @@ getRouter.get('/lgRatingCount/:brandName', async (req, res) => {
       brandName: req.params.brandName
     })
 
-    const ratingCount = await ratingSchema.find({ brandId: findIdByBrandName._id }).count()
+    const ratingCount = await ratingSchema
+      .find({ brandId: findIdByBrandName._id })
+      .count()
 
     return res.status(200).json({
       overallRating: findIdByBrandName.overallRating,
