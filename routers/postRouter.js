@@ -1,47 +1,47 @@
-const postRouter = require('express').Router()
-const { BrandStorage, CategoryStorage } = require('../config/fileStorage')
-const { parseFileURL } = require('../helpers/parseFileURL')
-const brandSchema = require('../models/brandSchema')
-const categorySchema = require('../models/categorySchema')
-const serviceAreaSchema = require('../models/serviceAreaSchema')
-const userSchema = require('../models/userSchema')
-const ratingSchema = require('../models/ratingSchema')
-const bcrypt = require('bcrypt')
-const JWT = require('jsonwebtoken')
+const postRouter = require("express").Router();
+const { BrandStorage, CategoryStorage } = require("../config/fileStorage");
+const { parseFileURL } = require("../helpers/parseFileURL");
+const brandSchema = require("../models/brandSchema");
+const categorySchema = require("../models/categorySchema");
+const serviceAreaSchema = require("../models/serviceAreaSchema");
+const userSchema = require("../models/userSchema");
+const ratingSchema = require("../models/ratingSchema");
+const bcrypt = require("bcrypt");
+const JWT = require("jsonwebtoken");
 
-async function TokenAuthentication (req, res, next) {
+async function TokenAuthentication(req, res, next) {
   try {
-    let token = req.cookies.token
+    let token = req.cookies.token;
     let decodedToken = JWT.verify(token, process.env.SECRET_KEY, {
-      algorithms: ['HS256']
-    })
+      algorithms: ["HS256"],
+    });
 
-    let user = await userSchema.findOne({ email: decodedToken.email })
+    let user = await userSchema.findOne({ email: decodedToken.email });
 
     if (!user) {
-      res.clearCookie('token')
+      res.clearCookie("token");
       return res
         .status(401)
-        .json({ message: 'User authentication failed', success: false })
+        .json({ message: "User authentication failed", success: false });
     }
-    next()
+    next();
   } catch (error) {
-    res.clearCookie('token')
-    res.status(401).json({ message: error.message, success: false, error })
+    res.clearCookie("token");
+    res.status(401).json({ message: error.message, success: false, error });
   }
 }
 
-postRouter.post('/validate', TokenAuthentication, (req, res) => {
-  res.status(200).json({ message: 'Authorized user', success: true })
-})
+postRouter.post("/validate", TokenAuthentication, (req, res) => {
+  res.status(200).json({ message: "Authorized user", success: true });
+});
 
-postRouter.post('/createBrand', BrandStorage, async (req, res) => {
+postRouter.post("/createBrand", BrandStorage, async (req, res) => {
   try {
     const { logo, titleBackground, sideImage } = parseFileURL(req, [
-      'logo',
-      'titleBackground',
-      'sideImage'
-    ])
+      "logo",
+      "titleBackground",
+      "sideImage",
+    ]);
     const {
       brandName,
       slug,
@@ -59,8 +59,8 @@ postRouter.post('/createBrand', BrandStorage, async (req, res) => {
       faqs,
       richTextHeader,
       contactNumber,
-      color
-    } = JSON.parse(req.body.data)
+      color,
+    } = JSON.parse(req.body.data);
     await brandSchema({
       brandName,
       slug,
@@ -81,25 +81,25 @@ postRouter.post('/createBrand', BrandStorage, async (req, res) => {
       faqs,
       richTextHeader,
       contactNumber,
-      color
-    }).save()
-    res.status(200).json({ message: 'Brand created', key: true })
+      color,
+    }).save();
+    res.status(200).json({ message: "Brand created", key: true });
   } catch (error) {
     res.status(500).json({
-      message: 'Something went wrong! Please Try Again Later',
+      message: "Something went wrong! Please Try Again Later",
       key: false,
-      error
-    })
+      error,
+    });
   }
-})
+});
 
-postRouter.post('/createServiceArea', BrandStorage, async (req, res) => {
+postRouter.post("/createServiceArea", BrandStorage, async (req, res) => {
   try {
     const { logo, titleBackground, sideImage } = parseFileURL(req, [
-      'logo',
-      'titleBackground',
-      'sideImage'
-    ])
+      "logo",
+      "titleBackground",
+      "sideImage",
+    ]);
     const {
       serviceAreaName,
       slug,
@@ -119,8 +119,8 @@ postRouter.post('/createServiceArea', BrandStorage, async (req, res) => {
       richTextHeader,
       contactNumber,
       color,
-      categoryName
-    } = JSON.parse(req.body.data)
+      categoryName,
+    } = JSON.parse(req.body.data);
     await serviceAreaSchema({
       serviceAreaName,
       slug,
@@ -143,26 +143,26 @@ postRouter.post('/createServiceArea', BrandStorage, async (req, res) => {
       richTextHeader,
       contactNumber,
       color,
-      categoryName
-    }).save()
-    res.status(200).json({ message: 'Service Area created', key: true })
+      categoryName,
+    }).save();
+    res.status(200).json({ message: "Service Area created", key: true });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({
-      message: 'Something went wrong! Please Try Again Later',
+      message: "Something went wrong! Please Try Again Later",
       key: false,
-      error
-    })
+      error,
+    });
   }
-})
+});
 
-postRouter.post('/createCategory', CategoryStorage, async (req, res) => {
+postRouter.post("/createCategory", CategoryStorage, async (req, res) => {
   try {
     const { logo, titleBackground, sideImage } = parseFileURL(req, [
-      'logo',
-      'titleBackground',
-      'sideImage'
-    ])
+      "logo",
+      "titleBackground",
+      "sideImage",
+    ]);
     const {
       categoryName,
       slug,
@@ -181,8 +181,8 @@ postRouter.post('/createCategory', CategoryStorage, async (req, res) => {
       faqs,
       richTextHeader,
       contactNumber,
-      color
-    } = JSON.parse(req.body.data)
+      color,
+    } = JSON.parse(req.body.data);
     await categorySchema({
       categoryName,
       slug,
@@ -204,184 +204,239 @@ postRouter.post('/createCategory', CategoryStorage, async (req, res) => {
       faqs,
       richTextHeader,
       contactNumber,
-      color
-    }).save()
-    res.status(200).json({ message: 'Category created', key: true })
+      color,
+    }).save();
+    res.status(200).json({ message: "Category created", key: true });
   } catch (error) {
     res.status(500).json({
-      message: 'Something went wrong! Please Try Again Later',
+      message: "Something went wrong! Please Try Again Later",
       key: false,
-      error
-    })
+      error,
+    });
   }
-})
+});
 
-postRouter.post('/postRating', async (req, res) => {
-  const { rating, comment, brandId } = req.body
+postRouter.post("/postRating", async (req, res) => {
+  const { rating, comment, brandId } = req.body;
 
   try {
     if (!rating && !brandId) {
       return res.status(500).json({
-        message: 'Rating must be filled',
-        key: false
-      })
+        message: "Rating must be filled",
+        key: false,
+      });
     }
 
     if (rating > 0 && rating <= 5) {
       await ratingSchema
         .create({ rating: rating, comment: comment, brandId: brandId })
-        .then(async response => {
-          await ratingSchema.find({ brandId: brandId }).then(dbRes => {
-            const ratingNum = 0
+        .then(async (response) => {
+          await ratingSchema.find({ brandId: brandId }).then((dbRes) => {
+            const ratingNum = 0;
             const totalRatings = dbRes.reduce(
               (sum, rating) => sum + rating.rating,
               ratingNum
-            )
+            );
 
-            const overallRating = totalRatings / dbRes.length
+            const overallRating = totalRatings / dbRes.length;
 
             brandSchema
               .findOneAndUpdate(
                 { _id: brandId },
                 { overallRating: overallRating.toFixed(1) }
               )
-              .catch(error => {
+              .catch((error) => {
                 return res.status(400).json({
-                  message: 'Something went wrong!',
+                  message: "Something went wrong!",
                   key: false,
-                  error
-                })
-              })
+                  error,
+                });
+              });
 
             return res
               .status(200)
-              .json({ message: 'Rating Posted', key: true, data: response })
-          })
-        })
+              .json({ message: "Rating Posted", key: true, data: response });
+          });
+        });
     } else {
       return res
         .status(400)
-        .json({ message: 'Something Went Wrong!', key: false })
+        .json({ message: "Something Went Wrong!", key: false });
     }
   } catch (error) {
     res.status(500).json({
-      message: 'Something went wrong! Please Try Again Later',
+      message: "Something went wrong! Please Try Again Later",
       key: false,
-      error
-    })
+      error,
+    });
   }
-})
+});
 
-postRouter.post('/ratingCountByBrand', async (req, res) => {
+postRouter.post("/ratingCountByBrand", async (req, res) => {
   try {
-    const reqData = req.body
+    const reqData = req.body;
 
     await brandSchema
       .findOne({ brandName: reqData.brandName })
-      .then(async dbRes => {
+      .then(async (dbRes) => {
         await ratingSchema
           .aggregate([
             {
               $match: {
-                brandId: dbRes._id
-              }
+                brandId: dbRes._id,
+              },
             },
             {
-              $count: 'brandId'
-            }
+              $count: "brandId",
+            },
           ])
-          .then(ratingData => {
+          .then((ratingData) => {
             return res.status(200).json({
               data: {
                 overallRating: dbRes.overallRating,
-                ratingCount: ratingData[0].brandId
+                ratingCount: ratingData[0].brandId,
               },
-              key: true
-            })
+              key: true,
+            });
           })
-          .catch(error => {
+          .catch((error) => {
             return res.json({
-              message: 'Something went wrong!',
+              message: "Something went wrong!",
               key: false,
-              error
-            })
-          })
+              error,
+            });
+          });
       })
-      .catch(error => {
+      .catch((error) => {
         return res.json({
-          message: 'Something went wrong!',
+          message: "Something went wrong!",
           key: false,
-          error
-        })
-      })
+          error,
+        });
+      });
   } catch (error) {
-    res.json({ data: [], message: 'Something went wrong!', key: false })
+    res.json({ data: [], message: "Something went wrong!", key: false });
   }
-})
+});
 
-postRouter.post('/login', async (req, res) => {
+postRouter.post("/login", async (req, res) => {
   try {
-    let { email, password } = req.body
-    let isUserExist = await userSchema.findOne({ email })
+    let { email, password } = req.body;
+    let isUserExist = await userSchema.findOne({ email });
 
     if (!isUserExist)
-      return res.status(404).json({ message: 'User not found', success: false })
+      return res
+        .status(404)
+        .json({ message: "User not found", success: false });
 
-    let isPasswordMatched = await bcrypt.compare(password, isUserExist.password)
+    let isPasswordMatched = await bcrypt.compare(
+      password,
+      isUserExist.password
+    );
 
     if (!isPasswordMatched)
       return res
         .status(401)
-        .json({ message: 'Password not matched', success: false })
+        .json({ message: "Password not matched", success: false });
 
     let payload = {
-      email: isUserExist.email
-    }
+      email: isUserExist.email,
+    };
 
     res.cookie(
-      'token',
+      "token",
       JWT.sign(payload, process.env.SECRET_KEY, {
-        expiresIn: '1h'
+        expiresIn: "1h",
       }),
       { httpOnly: true }
-    )
+    );
     res.status(200).json({
-      message: 'Successfully loggedIn',
-      success: true
-    })
+      message: "Successfully loggedIn",
+      success: true,
+    });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({
-      message: 'Something went wrong! Please Try Again Later',
+      message: "Something went wrong! Please Try Again Later",
       key: false,
-      error
-    })
+      error,
+    });
   }
-})
+});
 
-postRouter.post('/logout', async (req, res) => {
-  res.clearCookie('token')
-  res.json({ message: 'Logged out!', key: true })
-})
+postRouter.post("/resetPassword", async (req, res) => {
+  try {
+    let { email, password } = req.body;
+    let isUserExist = await userSchema.findOne({ email });
+
+    if (!isUserExist)
+      return res
+        .status(404)
+        .json({ message: "User not found", success: false });
+
+    let hashPwd = await bcrypt.hash(password, 10);
+
+    userSchema
+      .findOneAndUpdate({ email: email }, { password: hashPwd })
+      .then((dbRes) => {
+        res.status(200).json({
+          message: "Password Reset Successfully",
+          actualPassword: password,
+          password: hashPwd,
+          passwordStatus: dbRes,
+          success: true,
+        });
+      });
+
+    // if (!isPasswordMatched)
+    //   return res
+    //     .status(401)
+    //     .json({ message: "Password not matched", success: false });
+
+    // let payload = {
+    //   email: isUserExist.email,
+    // };
+
+    // res.cookie(
+    //   "token",
+    //   JWT.sign(payload, process.env.SECRET_KEY, {
+    //     expiresIn: "1h",
+    //   }),
+    //   { httpOnly: true }
+    // );
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Something went wrong! Please Try Again Later",
+      key: false,
+      error,
+    });
+  }
+});
+
+postRouter.post("/logout", async (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out!", key: true });
+});
 
 // this api for lg.net website
-postRouter.post('/lgRating', async (req, res) => {
-  const { rating, comment, brandName } = req.body
+postRouter.post("/lgRating", async (req, res) => {
+  const { rating, comment, brandName } = req.body;
 
   try {
     // console.log('rating, comment, brandName --->', rating, comment, brandName)
 
     if (!rating && !brandName) {
       return res.status(500).json({
-        message: 'Rating must be filled',
-        key: false
-      })
+        message: "Rating must be filled",
+        key: false,
+      });
     }
 
     if (rating > 0 && rating <= 5) {
       const findIdByBrandName = await brandSchema.findOne({
-        brandName: brandName
-      })
+        brandName: brandName,
+      });
 
       // console.log('findBrandName --->', findIdByBrandName)
 
@@ -389,51 +444,51 @@ postRouter.post('/lgRating', async (req, res) => {
         .create({
           rating: rating,
           comment: comment,
-          brandId: findIdByBrandName
+          brandId: findIdByBrandName,
         })
-        .then(async response => {
+        .then(async (response) => {
           // return res.json(response)
           await ratingSchema
             .find({ brandId: findIdByBrandName })
-            .then(dbRes => {
-              const ratingNum = 0
+            .then((dbRes) => {
+              const ratingNum = 0;
               const totalRatings = dbRes.reduce(
                 (sum, rating) => sum + rating.rating,
                 ratingNum
-              )
+              );
 
-              const overallRating = totalRatings / dbRes.length
+              const overallRating = totalRatings / dbRes.length;
 
               brandSchema
                 .findOneAndUpdate(
                   { _id: findIdByBrandName },
                   { overallRating: overallRating.toFixed(1) }
                 )
-                .catch(error => {
+                .catch((error) => {
                   return res.status(400).json({
-                    message: 'Something went wrong!',
+                    message: "Something went wrong!",
                     key: false,
-                    error
-                  })
-                })
+                    error,
+                  });
+                });
 
               return res
                 .status(200)
-                .json({ message: 'Rating Posted', key: true, data: response })
-            })
-        })
+                .json({ message: "Rating Posted", key: true, data: response });
+            });
+        });
     } else {
       return res
         .status(400)
-        .json({ message: 'Something Went Wrong!', key: false })
+        .json({ message: "Something Went Wrong!", key: false });
     }
   } catch (error) {
     res.status(500).json({
-      message: 'Something went wrong! Please Try Again Later',
+      message: "Something went wrong! Please Try Again Later",
       key: false,
-      error
-    })
+      error,
+    });
   }
-})
+});
 
-module.exports = postRouter
+module.exports = postRouter;
