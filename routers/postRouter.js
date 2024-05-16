@@ -8,6 +8,7 @@ const userSchema = require("../models/userSchema");
 const ratingSchema = require("../models/ratingSchema");
 const bcrypt = require("bcrypt");
 const JWT = require("jsonwebtoken");
+const common = require("../helpers/common");
 
 async function TokenAuthentication(req, res, next) {
   try {
@@ -488,6 +489,44 @@ postRouter.post("/lgRating", async (req, res) => {
       key: false,
       error,
     });
+  }
+});
+
+postRouter.post("/smtp/sendmail", async (req, res) => {
+  try {
+    const reqBody = req.body;
+
+    var htmlBody = `<div>
+      <p>Name: ${reqBody?.name}</p>
+      <p>Email: ${reqBody?.email}</p>
+      <p>Phone: ${reqBody?.number}</p>
+      <p>Message: ${reqBody?.message}</p>
+    </div>`;
+    common.sendEmail(
+      "customercareinchennai@gmail.com",
+      `You got a new enquiry from ${reqBody?.name}`,
+      htmlBody,
+      (callback) => {
+        console.log("sent");
+        if (callback) {
+          return res.status(200).json({
+            message: "Mail sent successfully!",
+            key: true,
+          });
+        } else {
+          return res.status(421).json({
+            message: "The service is unavailable, try again later",
+            key: false,
+          });
+        }
+      }
+    );
+  } catch (error) {
+   res.status(500).json({
+     message: "Something went wrong! Please Try Again Later",
+     key: false,
+     error,
+   });
   }
 });
 

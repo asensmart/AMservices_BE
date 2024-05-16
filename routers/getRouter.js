@@ -22,6 +22,13 @@ getRouter.get("/brand", async (req, res) => {
         "_id brandLogo brandName color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo overallRating richTextHeader sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
       )
       .lean();
+
+    const ratingCount = await ratingSchema
+      .find({ brandId: response?._id })
+      .count();
+
+    response.ratingCount = ratingCount;
+
     res.json({ data: response, key: true });
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
@@ -92,9 +99,13 @@ getRouter.get("/areaNames", async (req, res) => {
 getRouter.get("/areaName", async (req, res) => {
   try {
     const response = await serviceAreaSchema
-      .find({ slug: req.query.slug })
+      .find({
+        brandName: req.query.brandName,
+        categoryName: req.query.categoryName,
+        slug: req.query.slug,
+      })
       .select(
-        "_id brandName categoryName color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo serviceAreaLogo sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
+        "_id brandName categoryName slug color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo serviceAreaLogo sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
       )
       .lean();
     res.json({ data: response, key: true });
@@ -301,6 +312,42 @@ getRouter.get("/lgRatingCount/:brandName", async (req, res) => {
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
   }
+});
+
+getRouter.get("/sitemapData", async (req, res) => {
+  var BASE_URL = "https://customercareinchennai.com";
+  var sitemapData = [];
+
+  // find brand data
+  const findBrand = await brandSchema.find().populate("brandName");
+  const brandData = findBrand.map((brand) => ({
+    url: `${BASE_URL}/${brand?.brandName}`,
+    lastModified: new Date(),
+    priority: 1,
+  }));
+
+  // find category data
+  const findCat = await categorySchema
+    .find()
+    .populate("brandName categoryName");
+  const catData = findCat.map((cat) => ({
+    url: `${BASE_URL}/${cat?.brandName}/${cat?.categoryName}`,
+    lastModified: new Date(),
+    priority: 1,
+  }));
+
+  const findArea = await serviceAreaSchema
+    .find()
+    .populate("brandName categoryName slug");
+  const areaData = findArea.map((cat) => ({
+    url: `${BASE_URL}/${cat?.brandName}/${cat?.categoryName}${cat?.slug}`,
+    lastModified: new Date(),
+    priority: 1,
+  }));
+
+  sitemapData = [...brandData, ...catData, ...areaData];
+  res.send(sitemapData);
+  // res.json({ key: true, data: response });
 });
 
 module.exports = getRouter;
