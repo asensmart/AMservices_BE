@@ -11,6 +11,17 @@ const Brands = multer.diskStorage({
   },
 });
 
+const Blogs = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/blogs");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const extension = file.mimetype.split("/")[1];
+    cb(null, file.fieldname + "-" + uniqueSuffix + "." + extension);
+  },
+});
+
 const Category = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/categories");
@@ -27,6 +38,10 @@ module.exports = {
     { name: "logo", maxCount: 1 },
     { name: "titleBackground", maxCount: 1 },
     { name: "sideImage", maxCount: 1 },
+  ]),
+  BlogStorage: multer({ storage: Blogs }).fields([
+    { name: "banner", maxCount: 1 },
+    { name: "thumbnail", maxCount: 1 },
   ]),
   CategoryStorage: multer({ storage: Category }).fields([
     { name: "logo", maxCount: 1 },

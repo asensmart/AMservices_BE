@@ -4,6 +4,7 @@ const brandSchema = require("../models/brandSchema");
 const categorySchema = require("../models/categorySchema");
 const ratingSchema = require("../models/ratingSchema");
 const serviceAreaSchema = require("../models/serviceAreaSchema");
+const blogSchema = require("../models/blog");
 const fs = require("fs");
 
 deleteRouter.delete("/brand", async (req, res) => {
@@ -97,6 +98,31 @@ deleteRouter.delete("/rating/:ratingId", async (req, res) => {
           key: false,
         });
       });
+  } catch (error) {
+    res.json({ data: "something went wrong!", error, key: false });
+  }
+});
+
+deleteRouter.delete("/blog", async (req, res) => {
+  try {
+    const { _id, banner, thumbnail } = req.body;
+
+    // Get file paths for the images
+    const oldBanner = getFilePathFromURL(banner);
+    const oldThumbnail = getFilePathFromURL(thumbnail);
+
+    // Delete the blog from the database
+    await blogSchema.findByIdAndDelete({ _id });
+
+    // Unlink the images
+    fs.unlink(oldBanner, (err) => {
+      if (err) console.error(`Error deleting cover image: ${err.message}`);
+    });
+    fs.unlink(oldThumbnail, (err) => {
+      if (err) console.error(`Error deleting thumbnail image: ${err.message}`);
+    });
+
+    res.json({ data: "Blog deleted", key: true });
   } catch (error) {
     res.json({ data: "something went wrong!", error, key: false });
   }

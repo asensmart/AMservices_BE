@@ -1,11 +1,16 @@
 const postRouter = require("express").Router();
-const { BrandStorage, CategoryStorage } = require("../config/fileStorage");
+const {
+  BrandStorage,
+  CategoryStorage,
+  BlogStorage,
+} = require("../config/fileStorage");
 const { parseFileURL } = require("../helpers/parseFileURL");
 const brandSchema = require("../models/brandSchema");
 const categorySchema = require("../models/categorySchema");
 const serviceAreaSchema = require("../models/serviceAreaSchema");
 const userSchema = require("../models/userSchema");
 const ratingSchema = require("../models/ratingSchema");
+const blogSchema = require("../models/blog");
 const bcrypt = require("bcrypt");
 const JWT = require("jsonwebtoken");
 const common = require("../helpers/common");
@@ -323,6 +328,7 @@ postRouter.post("/ratingCountByBrand", async (req, res) => {
 postRouter.post("/login", async (req, res) => {
   try {
     let { email, password } = req.body;
+
     let isUserExist = await userSchema.findOne({ email });
 
     if (!isUserExist)
@@ -522,11 +528,53 @@ postRouter.post("/smtp/sendmail", async (req, res) => {
       }
     );
   } catch (error) {
-   res.status(500).json({
-     message: "Something went wrong! Please Try Again Later",
-     key: false,
-     error,
-   });
+    res.status(500).json({
+      message: "Something went wrong! Please Try Again Later",
+      key: false,
+      error,
+    });
+  }
+});
+
+// Blog Router API
+
+postRouter.post("/createBlog", BlogStorage, async (req, res) => {
+  try {
+    const { banner, thumbnail } = parseFileURL(req, ["banner", "thumbnail"]);
+    const blogData = req.body;
+
+    const {
+      blogTitle,
+      shortDescription,
+      metaKeywords,
+      metaTitle,
+      moreInfo,
+      metaDescription,
+    } = JSON.parse(blogData?.data);
+
+    await blogSchema
+      .create({
+        blogTitle: blogTitle,
+        shortDescription: shortDescription,
+        thumbnail: thumbnail,
+        banner: banner,
+        moreInfo: moreInfo,
+        metaTitle: metaTitle,
+        metaDescription: metaDescription,
+        metaKeywords: metaKeywords,
+      })
+      .then((dbRes) => {
+        res.status(201).json({ message: "Blog created", key: true });
+      })
+      .catch((error) => {
+        res.status(500).json({
+          message: "Something went wrong! Please Try Again Later",
+          key: false,
+          error,
+        });
+      });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating blog", error });
   }
 });
 

@@ -1,5 +1,6 @@
 const getRouter = require("express").Router();
 const brandSchema = require("../models/brandSchema");
+const blogSchema = require("../models/blog");
 const categorySchema = require("../models/categorySchema");
 const ratingSchema = require("../models/ratingSchema");
 const serviceAreaSchema = require("../models/serviceAreaSchema");
@@ -256,6 +257,86 @@ getRouter.get("/ratingsCount", async (req, res) => {
   }
 });
 
+getRouter.get("/sitemapData", async (req, res) => {
+  var BASE_URL = "https://customercareinchennai.com";
+  var sitemapData = [];
+
+  // find brand data
+  const findBrand = await brandSchema.find().populate("brandName");
+  const brandData = findBrand.map((brand) => ({
+    url: `${BASE_URL}/${brand?.brandName}`,
+    lastModified: new Date(),
+    priority: 1,
+  }));
+
+  // find category data
+  const findCat = await categorySchema
+    .find()
+    .populate("brandName categoryName");
+  const catData = findCat.map((cat) => ({
+    url: `${BASE_URL}/${cat?.brandName}/${cat?.categoryName}`,
+    lastModified: new Date(),
+    priority: 1,
+  }));
+
+  const findArea = await serviceAreaSchema
+    .find()
+    .populate("brandName categoryName slug");
+  const areaData = findArea.map((cat) => ({
+    url: `${BASE_URL}/${cat?.brandName}/${cat?.categoryName}${cat?.slug}`,
+    lastModified: new Date(),
+    priority: 1,
+  }));
+
+  sitemapData = [...brandData, ...catData, ...areaData];
+  res.send(sitemapData);
+  // res.json({ key: true, data: response });
+});
+
+getRouter.get("/getAllBlogs", async (req, res) => {
+  try {
+    await blogSchema
+      .find()
+      .then((dbRes) => {
+        res
+          .status(200)
+          .json({ message: "Blogs fetched", key: true, data: dbRes });
+      })
+      .catch((error) => {
+        res.status(500).json({
+          message: "Something went wrong! Please Try Again Later",
+          key: false,
+          error,
+        });
+      });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching blogs", error });
+  }
+});
+
+getRouter.get("/getBlog/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    await blogSchema
+      .find({ _id: id })
+      .then((dbRes) => {
+        res
+          .status(200)
+          .json({ message: "Blog fetched", key: true, data: dbRes[0] });
+      })
+      .catch((error) => {
+        res.status(500).json({
+          message: "Something went wrong! Please Try Again Later",
+          key: false,
+          error,
+        });
+      });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching blogs", error });
+  }
+});
+
 // this api for lg.net website
 getRouter.get("/lgratings/:brandName", async (req, res) => {
   try {
@@ -312,42 +393,6 @@ getRouter.get("/lgRatingCount/:brandName", async (req, res) => {
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
   }
-});
-
-getRouter.get("/sitemapData", async (req, res) => {
-  var BASE_URL = "https://customercareinchennai.com";
-  var sitemapData = [];
-
-  // find brand data
-  const findBrand = await brandSchema.find().populate("brandName");
-  const brandData = findBrand.map((brand) => ({
-    url: `${BASE_URL}/${brand?.brandName}`,
-    lastModified: new Date(),
-    priority: 1,
-  }));
-
-  // find category data
-  const findCat = await categorySchema
-    .find()
-    .populate("brandName categoryName");
-  const catData = findCat.map((cat) => ({
-    url: `${BASE_URL}/${cat?.brandName}/${cat?.categoryName}`,
-    lastModified: new Date(),
-    priority: 1,
-  }));
-
-  const findArea = await serviceAreaSchema
-    .find()
-    .populate("brandName categoryName slug");
-  const areaData = findArea.map((cat) => ({
-    url: `${BASE_URL}/${cat?.brandName}/${cat?.categoryName}${cat?.slug}`,
-    lastModified: new Date(),
-    priority: 1,
-  }));
-
-  sitemapData = [...brandData, ...catData, ...areaData];
-  res.send(sitemapData);
-  // res.json({ key: true, data: response });
 });
 
 module.exports = getRouter;
