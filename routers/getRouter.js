@@ -20,7 +20,7 @@ getRouter.get("/brand", async (req, res) => {
     const response = await brandSchema
       .findOne({ slug })
       .select(
-        "_id brandLogo brandName color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo overallRating richTextHeader sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
+        "_id brandLogo brandName slug color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo overallRating richTextHeader sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
       )
       .lean();
 
@@ -63,13 +63,25 @@ getRouter.get("/categories", async (req, res) => {
 getRouter.get("/category", async (req, res) => {
   let slug = req.query.slug;
   try {
-    const response = await categorySchema
-      .findOne({ slug })
-      .select(
-        "_id brandName categoryLogo categoryName color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo richTextHeader sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
-      )
-      .lean();
-    res.json({ data: response, key: true });
+    const splitSlug = slug.slice(1).split("/");
+
+    await brandSchema
+      .find({ slug: `/${splitSlug[0]}` })
+      .select("brandName")
+      .lean()
+      .then(async (dbRes) => {
+        const response = await categorySchema
+          .findOne({
+            brandName: dbRes[0].brandName,
+            slug: `/${splitSlug[1]}`,
+          })
+          .select(
+            "_id brandName categoryLogo categoryName color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo richTextHeader sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
+          )
+          .lean();
+
+        res.json({ data: response, key: true });
+      });
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
   }
@@ -78,11 +90,17 @@ getRouter.get("/category", async (req, res) => {
 getRouter.get("/categoriesByBrand", async (req, res) => {
   let brandName = req.query.brandName;
   try {
-    const response = await categorySchema
-      .find({ brandName })
-      .select("slug categoryName")
-      .lean();
-    res.json({ data: response, key: true });
+    await brandSchema
+      .find({ slug: `/${brandName}` })
+      .select("brandName")
+      .lean()
+      .then(async (dbRes) => {
+        const response = await categorySchema
+          .find({ brandName: dbRes[0].brandName })
+          .select("slug categoryName brandName")
+          .lean();
+        res.json({ data: response, key: true });
+      });
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
   }
@@ -99,16 +117,31 @@ getRouter.get("/areaNames", async (req, res) => {
 
 getRouter.get("/areaName", async (req, res) => {
   try {
+    const brandName = req.query.brandName;
+    const categoryName = req.query.categoryName;
+    const serviceArea = req.query.slug;
+
+    const brand = await brandSchema
+      .findOne({ slug: `/${brandName}` })
+      .select("brandName")
+      .lean();
+
+    const category = await categorySchema
+      .findOne({ slug: `/${categoryName}` })
+      .select("categoryName")
+      .lean();
+
     const response = await serviceAreaSchema
       .find({
-        brandName: req.query.brandName,
-        categoryName: req.query.categoryName,
-        slug: req.query.slug,
+        brandName: brand?.brandName,
+        categoryName: category?.categoryName,
+        slug: serviceArea,
       })
       .select(
         "_id brandName categoryName slug color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo serviceAreaLogo sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
       )
       .lean();
+
     res.json({ data: response, key: true });
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
@@ -117,13 +150,39 @@ getRouter.get("/areaName", async (req, res) => {
 
 getRouter.get("/areaNamesByBrandName", async (req, res) => {
   try {
-    const response = await serviceAreaSchema
-      .find({
-        brandName: req.query.brandName,
-      })
-      .select("_id brandName categoryName slug title serviceAreaName color")
-      .lean();
-    res.json({ data: response, key: true });
+    await brandSchema
+      .find({ slug: `/${req?.query?.brandName}` })
+      .select("brandName")
+      .lean()
+      .then(async (dbRes) => {
+        // Find all categories for the brand
+        const categories = await categorySchema
+          .find({ brandName: dbRes[0]?.brandName })
+          .select("categoryName slug")
+          .lean();
+
+        // Create a map for quick lookup of category slug by categoryName
+        const categorySlugMap = {};
+        categories.forEach((cat) => {
+          categorySlugMap[cat.categoryName] = cat.slug;
+        });
+
+        // Find all service areas for the brand
+        const response = await serviceAreaSchema
+          .find({
+            brandName: dbRes[0]?.brandName,
+          })
+          .select("_id brandName categoryName slug title serviceAreaName color")
+          .lean();
+
+        // Attach categorySlug to each service area
+        const result = response.map((area) => ({
+          ...area,
+          categorySlug: categorySlugMap[area.categoryName] || null,
+        }));
+
+        res.json({ data: result, key: true });
+      });
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
   }
@@ -143,14 +202,33 @@ getRouter.get("/areaNamesByBrandCategory", async (req, res) => {
 
 getRouter.get("/areaNamesByCategoryName", async (req, res) => {
   try {
+    const categoryName = req?.query?.categoryName;
+    // Find the category by name to get its slug and brandName
+    const category = await categorySchema
+      .findOne({ slug: `/${categoryName}` })
+      .select("brandName categoryName slug")
+      .lean();
+
+    if (!category) {
+      return res.json({ data: [], message: "Category not found", key: false });
+    }
+
+    // Find all service areas for this brand and category
     const response = await serviceAreaSchema
       .find({
-        // categoryName: req.query.categoryName,
-        brandName: req.query.categoryName,
+        brandName: category?.brandName,
+        categoryName: category?.categoryName,
       })
       .select("_id brandName categoryName slug title color serviceAreaName")
       .lean();
-    res.json({ data: response, key: true });
+
+    // Attach categorySlug to each service area
+    const result = response.map((area) => ({
+      ...area,
+      categorySlug: category.slug,
+    }));
+
+    res.json({ data: result, brandSlug: category.slug, key: true });
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
   }
@@ -262,9 +340,9 @@ getRouter.get("/sitemapData", async (req, res) => {
   var sitemapData = [];
 
   // find brand data
-  const findBrand = await brandSchema.find().populate("brandName");
+  const findBrand = await brandSchema.find().populate("slug");
   const brandData = findBrand.map((brand) => ({
-    url: `${BASE_URL}/${brand?.brandName}`,
+    url: `${BASE_URL}/${brand?.slug}`,
     lastModified: new Date(),
     priority: 1,
   }));
@@ -272,21 +350,39 @@ getRouter.get("/sitemapData", async (req, res) => {
   // find category data
   const findCat = await categorySchema
     .find()
-    .populate("brandName categoryName");
-  const catData = findCat.map((cat) => ({
-    url: `${BASE_URL}/${cat?.brandName}/${cat?.categoryName}`,
-    lastModified: new Date(),
-    priority: 1,
-  }));
+    .populate("brandName categoryName slug");
+  const catData = await Promise.all(
+    findCat.map(async (cat) => {
+      const findBrandSlug = await brandSchema.findOne({
+        brandName: cat?.brandName,
+      });
+      return {
+        url: `${BASE_URL}${findBrandSlug?.slug}${cat?.slug}`,
+        lastModified: new Date(),
+        priority: 1,
+      };
+    })
+  );
 
   const findArea = await serviceAreaSchema
     .find()
     .populate("brandName categoryName slug");
-  const areaData = findArea.map((cat) => ({
-    url: `${BASE_URL}/${cat?.brandName}/${cat?.categoryName}${cat?.slug}`,
-    lastModified: new Date(),
-    priority: 1,
-  }));
+  const areaData = await Promise.all(
+    findArea.map(async (cat) => {
+      const findBrandSlug = await brandSchema.findOne({
+        brandName: cat?.brandName,
+      });
+
+      const findCategorySlug = await categorySchema.findOne({
+        categoryName: cat?.categoryName,
+      });
+      return {
+        url: `${BASE_URL}${findBrandSlug?.slug}${findCategorySlug?.slug}${cat?.slug}`,
+        lastModified: new Date(),
+        priority: 1,
+      };
+    })
+  );
 
   sitemapData = [...brandData, ...catData, ...areaData];
   res.send(sitemapData);
@@ -367,8 +463,6 @@ getRouter.get("/slicedRatings/:id", async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(3)
       .then((dbRes) => {
-        console.log("dbRes -->", dbRes);
-        // const findByBrandName = dbRes.find({ brandName: 'lg' })
         return res.status(200).json(dbRes.reverse());
       });
   } catch (error) {
