@@ -42,7 +42,7 @@ app.use("/uploads/blogs", express.static(path.join(__dirname, "uploads", "blogs"
 app.use("/api/v1/", Router);
 
 app.get("/", (req, res) => {
-  res.send("Welcome to the API");
+  res.send("Welcome to the API 2");
 });
 
 const PORT = process.env.PORT;
