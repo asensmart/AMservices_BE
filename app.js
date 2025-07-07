@@ -22,23 +22,11 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use("/uploads/brands", express.static(__dirname + "/uploads/brands/"));
-const path = require("path");
-
-// Ensure the uploads/categories directory exists
-const fs = require("fs");
-const categoriesDir = path.join(__dirname, "uploads", "categories");
-if (!fs.existsSync(categoriesDir)) {
-  fs.mkdirSync(categoriesDir, { recursive: true });
-}
-
 app.use(
   "/uploads/categories",
-  express.static(path.join(__dirname, "uploads", "categories"), {
-    fallthrough: false // Send 404 if file not found
-  })
+  express.static(__dirname + "/uploads/categories/")
 );
-
-app.use("/uploads/blogs", express.static(path.join(__dirname, "uploads", "blogs")));
+app.use("/uploads/blogs", express.static(__dirname + "/uploads/blogs/"));
 app.use("/api/v1/", Router);
 
 app.get("/", (req, res) => {

@@ -344,7 +344,7 @@ getRouter.get("/sitemapData", async (req, res) => {
   const brandData = findBrand.map((brand) => ({
     url: `${BASE_URL}/${brand?.slug}`,
     lastModified: new Date(),
-    priority: 1,
+    priority: 1.0,
   }));
 
   // find category data
@@ -359,7 +359,7 @@ getRouter.get("/sitemapData", async (req, res) => {
       return {
         url: `${BASE_URL}${findBrandSlug?.slug}${cat?.slug}`,
         lastModified: new Date(),
-        priority: 1,
+        priority: 1.0,
       };
     })
   );
@@ -379,7 +379,7 @@ getRouter.get("/sitemapData", async (req, res) => {
       return {
         url: `${BASE_URL}${findBrandSlug?.slug}${findCategorySlug?.slug}${cat?.slug}`,
         lastModified: new Date(),
-        priority: 1,
+        priority: 1.0,
       };
     })
   );
