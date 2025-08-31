@@ -22,10 +22,10 @@ const categorySchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    description: {
-      type: String,
-      required: true,
-    },
+    // description: {
+    //   type: String,
+    //   required: true,
+    // },
     titleBackgroundImage: {
       type: String,
       required: true,
@@ -74,10 +74,10 @@ const categorySchema = mongoose.Schema(
       type: Array,
       default: [],
     },
-    richTextHeader: {
-      type: String,
-      required: true,
-    },
+    // richTextHeader: {
+    //   type: String,
+    //   required: true,
+    // },
     contactNumber: {
       type: String,
       required: true,

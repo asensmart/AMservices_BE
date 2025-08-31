@@ -138,7 +138,7 @@ getRouter.get("/areaName", async (req, res) => {
         slug: serviceArea,
       })
       .select(
-        "_id brandName categoryName slug color contactNumber description faqs logoAltName metaDescription metaKeywords metaTitle moreInfo serviceAreaLogo sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName"
+        "_id brandName categoryName slug color contactNumber description enableFaq faqs logoAltName metaDescription metaKeywords metaTitle moreInfo serviceAreaLogo sideImageAltName sideImageHeader sideThumbnail titleBackgroundImage titleImageAltName gMap"
       )
       .lean();
 
