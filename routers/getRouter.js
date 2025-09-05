@@ -108,7 +108,9 @@ getRouter.get("/categoriesByBrand", async (req, res) => {
 
 getRouter.get("/areaNames", async (req, res) => {
   try {
-    const response = await serviceAreaSchema.find();
+    const response = await serviceAreaSchema
+      .find()
+      .sort({ serviceAreaName: 1 }); // ascending order by serviceAreaName
     res.json({ data: response, key: true });
   } catch (error) {
     res.json({ data: [], message: "Something went wrong!", key: false });
@@ -203,9 +205,11 @@ getRouter.get("/areaNamesByBrandCategory", async (req, res) => {
 getRouter.get("/areaNamesByCategoryName", async (req, res) => {
   try {
     const categoryName = req?.query?.categoryName;
+    const brand = req?.query?.brandName;
+
     // Find the category by name to get its slug and brandName
     const category = await categorySchema
-      .findOne({ slug: `/${categoryName}` })
+      .findOne({ slug: `/${categoryName}`, brandName: brand })
       .select("brandName categoryName slug")
       .lean();
 
