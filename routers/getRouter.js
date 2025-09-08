@@ -109,11 +109,36 @@ getRouter.get("/categoriesByBrand", async (req, res) => {
 getRouter.get("/areaNames", async (req, res) => {
   try {
     const response = await serviceAreaSchema
-      .find()
-      .sort({ serviceAreaName: 1 }); // ascending order by serviceAreaName
+      .find(
+        {},
+        {
+          title: 4,
+          slug: 3,
+          serviceAreaName: 2, // Added to match your original example
+          _id: 1,
+        }
+      ) // Only fetch needed fields
+      .sort({ serviceAreaName: 1 }); // Sort before awaiting
+
     res.json({ data: response, key: true });
   } catch (error) {
+    console.error("Error fetching area names:", error);
     res.json({ data: [], message: "Something went wrong!", key: false });
+  }
+});
+
+getRouter.get("/areaNamesById/:id", async (req, res) => {
+  try {
+    const areaId = req.params.id;
+    const response = await serviceAreaSchema.findById(areaId).lean();
+
+    if (!response) {
+      return res.json({ data: null, message: "Area not found", key: false });
+    }
+    res.json({ data: response, key: true });
+  } catch (error) {
+    console.error("Error fetching area by ID:", error);
+    res.json({ data: null, message: "Something went wrong!", key: false });
   }
 });
 
