@@ -369,22 +369,26 @@ getRouter.get("/sitemapData", async (req, res) => {
   var sitemapData = [];
 
   // find brand data
-  const findBrand = await brandSchema.find().populate("slug");
+  const findBrand = await brandSchema.find({}, { slug: 1 });
   const brandData = findBrand.map((brand) => ({
-    url: `${BASE_URL}/${brand?.slug}`,
+    url: `${BASE_URL}${brand?.slug}`,
     lastModified: new Date(),
     priority: 1.0,
   }));
 
   // find category data
-  const findCat = await categorySchema
-    .find()
-    .populate("brandName categoryName slug");
+  const findCat = await categorySchema.find(
+    {},
+    { brandName: 1, slug: 2, categoryName: 3 }
+  );
   const catData = await Promise.all(
     findCat.map(async (cat) => {
-      const findBrandSlug = await brandSchema.findOne({
-        brandName: cat?.brandName,
-      });
+      const findBrandSlug = await brandSchema.findOne(
+        {
+          brandName: cat?.brandName,
+        },
+        { slug: 1 }
+      );
       return {
         url: `${BASE_URL}${findBrandSlug?.slug}${cat?.slug}`,
         lastModified: new Date(),
@@ -393,18 +397,27 @@ getRouter.get("/sitemapData", async (req, res) => {
     })
   );
 
-  const findArea = await serviceAreaSchema
-    .find()
-    .populate("brandName categoryName slug");
+  const findArea = await serviceAreaSchema.find(
+    {},
+    { brandName: 1, categoryName: 2, slug: 3 }
+  );
+  // .populate("brandName categoryName slug");
   const areaData = await Promise.all(
     findArea.map(async (cat) => {
-      const findBrandSlug = await brandSchema.findOne({
-        brandName: cat?.brandName,
-      });
+      const findBrandSlug = await brandSchema.findOne(
+        {
+          brandName: cat?.brandName,
+        },
+        { slug: 1 }
+      );
 
-      const findCategorySlug = await categorySchema.findOne({
-        categoryName: cat?.categoryName,
-      });
+      const findCategorySlug = await categorySchema.findOne(
+        {
+          categoryName: cat?.categoryName,
+        },
+        { slug: 1 }
+      );
+
       return {
         url: `${BASE_URL}${findBrandSlug?.slug}${findCategorySlug?.slug}${cat?.slug}`,
         lastModified: new Date(),
