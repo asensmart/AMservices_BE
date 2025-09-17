@@ -365,7 +365,7 @@ getRouter.get("/ratingsCount", async (req, res) => {
 });
 
 getRouter.get("/sitemapData", async (req, res) => {
-  var BASE_URL = "https://customercareinchennai.com";
+  var BASE_URL = "https://www.customercareinchennai.com";
   var sitemapData = [];
 
   // find brand data
