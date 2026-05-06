@@ -509,6 +509,7 @@ postRouter.post("/smtp/sendmail", async (req, res) => {
       <p>Email: ${reqBody?.email}</p>
       <p>Phone: ${reqBody?.number}</p>
       <p>Message: ${reqBody?.message}</p>
+      <p>Brand: ${reqBody?.brand}</p>
     </div>`;
     common.sendEmail(
       "customercareinchennai@gmail.com",
