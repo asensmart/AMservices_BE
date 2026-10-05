@@ -6,6 +6,10 @@ const brandSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    isMenuHide: {
+      type: Boolean,
+      default: false,
+    },
     overallRating: {
       type: Number,
       default: 0,

@@ -263,6 +263,17 @@ getRouter.get("/areaNamesByCategoryName", async (req, res) => {
   }
 });
 
+getRouter.get("/ratings", async (req, res) => {
+  try {
+    const dbRes = await ratingSchema.find().lean();
+    return res
+      .status(200)
+      .json({ data: dbRes.reverse(), key: true });
+  } catch (error) {
+    res.json({ data: [], message: "Something went wrong!", key: false, error });
+  }
+});
+
 getRouter.get("/ratings/:brandId", async (req, res) => {
   try {
     const id = req.params.brandId;

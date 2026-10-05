@@ -42,6 +42,7 @@ postRouter.post("/validate", TokenAuthentication, (req, res) => {
 });
 
 postRouter.post("/createBrand", BrandStorage, async (req, res) => {
+
   try {
     const { logo, titleBackground, sideImage } = parseFileURL(req, [
       "logo",
@@ -66,6 +67,7 @@ postRouter.post("/createBrand", BrandStorage, async (req, res) => {
       // richTextHeader,
       contactNumber,
       color,
+      isMenuHide,
     } = JSON.parse(req.body.data);
     await brandSchema({
       brandName,
@@ -88,6 +90,7 @@ postRouter.post("/createBrand", BrandStorage, async (req, res) => {
       // richTextHeader,
       contactNumber,
       color,
+      isMenuHide,
     }).save();
     res.status(200).json({ message: "Brand created", key: true });
   } catch (error) {
@@ -514,6 +517,46 @@ postRouter.post("/smtp/sendmail", async (req, res) => {
     common.sendEmail(
       "customercareinchennai@gmail.com",
       `You got a new enquiry from ${reqBody?.name}`,
+      htmlBody,
+      (callback) => {
+        console.log("sent");
+        if (callback) {
+          return res.status(200).json({
+            message: "Mail sent successfully!",
+            key: true,
+          });
+        } else {
+          return res.status(421).json({
+            message: "The service is unavailable, try again later",
+            key: false,
+          });
+        }
+      }
+    );
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong! Please Try Again Later",
+      key: false,
+      error,
+    });
+  }
+});
+
+// Samsung and LG Send Email
+postRouter.post("/smtp/staticsendmail", async (req, res) => {
+  try {
+    const reqBody = req.body;
+
+    var htmlBody = `<div>
+      <p>Name: ${reqBody?.name}</p>
+      <p>Email: ${reqBody?.email}</p>
+      <p>Phone: ${reqBody?.number}</p>
+      <p>Message: ${reqBody?.message}</p>
+      <p>Brand: ${reqBody?.brand}</p>
+    </div>`;
+    common.sendEmail(
+      "customercareinchennai@gmail.com",
+      `Contact Enquiry From ${reqBody?.subject}`,
       htmlBody,
       (callback) => {
         console.log("sent");
