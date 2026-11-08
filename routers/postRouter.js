@@ -283,6 +283,41 @@ postRouter.post("/postRating", async (req, res) => {
   }
 });
 
+postRouter.post("/HomePostRating", async (req, res) => {
+
+  const { rating, comment } = req.body;
+
+  try {
+    if (!rating) {
+      return res.status(500).json({
+        message: "Rating must be filled",
+        key: false,
+      });
+    }
+
+    if (rating > 0 && rating <= 5) {
+
+      await ratingSchema
+        .create({ rating: rating, comment: comment })
+        .then(async (response) => {
+          return res
+            .status(200)
+            .json({ message: "Rating Posted", key: true, data: response });
+        });
+    } else {
+      return res
+        .status(400)
+        .json({ message: "Something Went Wrong!", key: false });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong! Please Try Again Later",
+      key: false,
+      error,
+    });
+  }
+});
+
 postRouter.post("/ratingCountByBrand", async (req, res) => {
   try {
     const reqData = req.body;
